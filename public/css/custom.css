@@ -1,0 +1,37 @@
+.display-flex-column{
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    align-items: center;
+    padding:20px 50px;
+  
+    color:white;
+    border-radius: 4px;
+}
+.card1{
+    background: rgb(3,124,179);
+    background: linear-gradient(90deg, rgba(3,124,179,1) 7%, rgba(0,212,255,1) 100%);
+}
+.card2{
+    background: rgb(179,136,3);
+    background: linear-gradient(90deg, rgba(255,115,0,1) 7%, rgba(179,136,3,1) 100%);
+}
+.card3{
+    background: rgb(54,179,3);
+    background: linear-gradient(90deg, rgba(54,179,3,1) 7%, rgba(0,255,141,1) 100%);
+}
+.display-flex-column .icon {
+    font-size: 60px;
+}
+.display-flex-column p {
+    font-size: 24px;
+    font-weight: 700;
+}
+.pt-12{
+    padding:20px;
+    
+}
+
+#bulk_import_btn{
+display:none !important;	
+}
