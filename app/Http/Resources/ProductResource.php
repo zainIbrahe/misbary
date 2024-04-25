@@ -36,8 +36,12 @@ class ProductResource extends JsonResource
 	
 		$isFav = $this->resource->product ? $this->resource->product->isFav() : 0;
 		$brand =$this->resource->product ?  $this->resource->product->category ? Category::find($this->resource->product->category->parent_id) : null : null;
-		
-		$files = [];
+		if($this->resource->product->main_image != null){
+			$files = [$this->resource->product->main_image];
+		}
+		else{
+			$files = [];
+		}
 		if($this->resource->product != null && json_decode($this->resource->product->files,true) != null){
 		
 		foreach(json_decode($this->resource->product->files,true) as $file){

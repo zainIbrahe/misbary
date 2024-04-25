@@ -12,6 +12,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Auth;
+use App\City;
 
 class User extends \TCG\Voyager\Models\User
 {
@@ -50,19 +51,17 @@ class User extends \TCG\Voyager\Models\User
         'password' => 'hashed',
     ];
 	
-	public function isFav(){
-		if(Auth::user()){
-			$userFav = UserFavourite::where("user_id",Auth::user()->id)->where("product_id",$this->id)->get();
-			$res = 0;
-			if(count($userFav) > 0){
-				$res = 1;
-			}
-		}
-		else{
-			$res = 0;
-		}
-		return $res;
-	}
+	// public function isFav(){
+    //         $id = 0;
+    //         $userFav = Favourite::where("user_id",$id)->where("product_id",$this->id)->get();
+            
+	// 		$res = 0;
+            
+	// 		if(count($userFav) > 0){
+	// 			$res = 1;
+	// 		}
+    //         return $res;
+	// }
 	
     public function plan()
     {
@@ -87,6 +86,10 @@ class User extends \TCG\Voyager\Models\User
 	}
 	public function reels(){
 		return $this->hasMany(Reel::class,"created_by");
+	}
+
+    public function city(){
+        return $this->belongsTo(City::class,"location");
 	}
 	
 

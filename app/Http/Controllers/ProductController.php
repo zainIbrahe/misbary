@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Attribute;
+use App\AttributeValue;
 use App\Imports\ProductImportClass;
 use App\Product;
 use App\ProductProsCon;
@@ -29,9 +30,10 @@ class ProductController extends \TCG\Voyager\Http\Controllers\VoyagerBaseControl
         $product = ProductsSku::query()->with("product")->with("attributes.attributeType:id,type")->find(4);
         return $product;
     }
-	
-	public function getPending(Request $request){
-	 // GET THE SLUG, ex. 'posts', 'pages', etc.
+
+    public function getPending(Request $request)
+    {
+        // GET THE SLUG, ex. 'posts', 'pages', etc.
         $slug = 'products';
 
         // GET THE DataType based on the slug
@@ -60,7 +62,7 @@ class ProductController extends \TCG\Voyager\Http\Controllers\VoyagerBaseControl
         if (strlen($dataType->model_name) != 0) {
             $model = app($dataType->model_name);
 
-            $query = $model::where("status","!=",1)->select($dataType->name . '.*');
+            $query = $model::where("status", "!=", 1)->select($dataType->name . '.*');
 
             if ($dataType->scope && $dataType->scope != '' && method_exists($model, 'scope' . ucfirst($dataType->scope))) {
                 $query->{$dataType->scope}();
@@ -200,8 +202,8 @@ class ProductController extends \TCG\Voyager\Http\Controllers\VoyagerBaseControl
                 'showCheckboxColumn'
             )
         );
-	}
-	
+    }
+
     public function index(Request $request)
     {
         // GET THE SLUG, ex. 'posts', 'pages', etc.
@@ -377,13 +379,13 @@ class ProductController extends \TCG\Voyager\Http\Controllers\VoyagerBaseControl
 
     public function create(Request $request)
     {
-		$currencies = '[
+        $currencies = '[
   
-  {"cc":"IQD","symbol":"\u062f.\u0639","name":"Iraqi dinar"},
-  
-  {"cc":"USD","symbol":"USD","name":"United States dollar"}
-  
-]';
+            {"cc":"IQD","symbol":"\u062f.\u0639","name":"Iraqi dinar"},
+            
+            {"cc":"USD","symbol":"USD","name":"United States dollar"}
+            
+        ]';
         $slug = $this->getSlug($request);
 
         $dataType = Voyager::model('DataType')->where('slug', '=', $slug)->first();
@@ -413,15 +415,17 @@ class ProductController extends \TCG\Voyager\Http\Controllers\VoyagerBaseControl
         if (view()->exists("voyager::$slug.edit-add")) {
             $view = "voyager::$slug.edit-add";
         }
-		$attributes = \App\Attribute::all();
-		
-        return Voyager::view($view, compact('dataType', 'dataTypeContent', 'isModelTranslatable','attributes','currencies'));
+        $attributes = Attribute::where("name", "!=", "specifications")->get();
+        $attr_values = \App\NewAttributesValue::where('attribute_type', 226)->get();
+        $att = Attribute::find(226);
+        $specValues = $attr_values;
+        return Voyager::view($view, compact('dataType', 'specValues', 'dataTypeContent', 'isModelTranslatable', 'attributes', 'currencies'));
     }
-	
-	
-	public function edit(Request $request, $id)
+
+
+    public function edit(Request $request, $id)
     {
-		$currencies = '[
+        $currencies = '[
   
   {"cc":"IQD","symbol":"\u062f.\u0639","name":"Iraqi dinar"},
  
@@ -442,7 +446,7 @@ class ProductController extends \TCG\Voyager\Http\Controllers\VoyagerBaseControl
             if ($dataType->scope && $dataType->scope != '' && method_exists($model, 'scope' . ucfirst($dataType->scope))) {
                 $query = $query->{$dataType->scope}();
             }
-            $dataTypeContent = Product::with("sku.pro","sku.attributes.attributeType")->findOrFail($id);
+            $dataTypeContent = Product::with("sku.pro", "sku.attributes.attributeType")->findOrFail($id);
         } else {
             // If Model doest exist, get data from table name
             $dataTypeContent = DB::table($dataType->name)->where('id', $id)->first();
@@ -468,35 +472,52 @@ class ProductController extends \TCG\Voyager\Http\Controllers\VoyagerBaseControl
         if (view()->exists("voyager::$slug.edit-add")) {
             $view = "voyager::$slug.edit-add";
         }
-		$attributes = \App\Attribute::all();
-        return Voyager::view($view, compact('dataType', 'dataTypeContent', 'isModelTranslatable','attributes','currencies'));
-    
-		
-	}
+        $attributes = Attribute::where("name", "!=", "specifications")->get();
+        $attr_values = \App\NewAttributesValue::where('attribute_type', 226)->get();
+        $att = Attribute::find(226);
+        $specValues = $attr_values;
+        $sku = ProductsSku::where("product_id", $id)->first();
+        $proSpecVallues = AttributeValue::where(
+            [
+                ["attribute_type", 226],
+                ["sku_id", $sku->id],
+
+            ]
+        )->pluck("attribute_value");
+        $productspecsvals = [];
+        foreach ($proSpecVallues as $aa) {
+            array_push($productspecsvals, $aa);
+        }
+
+        return Voyager::view($view, compact('dataType', 'productspecsvals', 'specValues', 'dataTypeContent', 'isModelTranslatable', 'attributes', 'currencies'));
+
+
+    }
 
     public function store(Request $request)
     {
-		//return $request;
-		
+        //return $request;
+        ini_set('max_execution_time', 0);
+
         $slug = $this->getSlug($request);
 
         $dataType = Voyager::model('DataType')->where('slug', '=', $slug)->first();
 
         // Check permission
         $this->authorize('add', app($dataType->model_name));
-	
-		
+
+
         // Validate fields with ajax
         $val = $this->validateBread($request->all(), $dataType->addRows)->validate();
         $data = $this->insertUpdateData($request, $slug, $dataType->addRows, new $dataType->model_name());
         $attributeTypes = $request->types;
         $attributeKeys = $request->keys;
         $attributeValues = $request->values;
-		if(!$request->createdBy){
-			$pro = Product::find($data->id);
-			$pro->created_by = 1;
-			$pro->save();
-		}
+        if (!$request->createdBy) {
+            $pro = Product::find($data->id);
+            $pro->created_by = 1;
+            $pro->save();
+        }
 
         $sku = new ProductsSku();
         $sku->product_id = $data->id;
@@ -507,41 +528,49 @@ class ProductController extends \TCG\Voyager\Http\Controllers\VoyagerBaseControl
         $sku->save();
         $compareTypes = $request->compareTypes;
         $compareValues = $request->compareValues;
-	if($compareTypes){
-	
-        foreach ($compareTypes as $ind => $compareType) {
-            $compare = new ProductProsCon();
-            $compare->type = $compareType;
-            $compare->description = $compareValues[$ind];
-            $compare->product_id = $sku->id;
-            $compare->save();
-        }
-	}	
-		if($attributeValues){
-			
-        foreach ($attributeValues as $index => $attVal) {
-            $attributeVal = new \App\AttributeValue();
-			$ke = \App\NewAttributesValue::where("en_name",$attVal)->first();
-			
-			
-			
-			if(!$ke){
-				 if($index < count($attributeTypes)){
-				$attrKey = $attributeTypes[$index];
-            	$attr = Attribute::find($attrKey);
-					 }
-			}
-			else{
-				$attrKey = $ke->attribute_type;
-            	$attr = Attribute::find($attrKey);
-			}
-            $attributeVal->attribute_type = $attr->id;
-            $attributeVal->attribute_value = $attVal;
-            $attributeVal->sku_id = $sku->id;
-            $attributeVal->save();
+        if ($compareTypes) {
 
-            $attributeVal->save();
+            foreach ($compareTypes as $ind => $compareType) {
+                $compare = new ProductProsCon();
+                $compare->type = $compareType;
+                $compare->description = $compareValues[$ind];
+                $compare->product_id = $sku->id;
+                $compare->save();
+            }
         }
+        if ($request->spes) {
+            foreach ($request->spes as $spec) {
+                $attributeVal = new AttributeValue();
+                $attributeVal->attribute_type = 226;
+                $attributeVal->attribute_value = $spec;
+                $attributeVal->sku_id = $sku->id;
+                $attributeVal->save();
+            }
+        }
+        if ($attributeValues) {
+
+            foreach ($attributeValues as $index => $attVal) {
+                $attributeVal = new AttributeValue();
+                $ke = \App\NewAttributesValue::where("en_name", $attVal)->first();
+
+
+
+                if (!$ke) {
+                    if ($index < count($attributeTypes)) {
+                        $attrKey = $attributeTypes[$index];
+                        $attr = Attribute::find($attrKey);
+                    }
+                } else {
+                    $attrKey = $ke->attribute_type;
+                    $attr = Attribute::find($attrKey);
+                }
+                $attributeVal->attribute_type = $attr->id;
+                $attributeVal->attribute_value = $attVal;
+                $attributeVal->sku_id = $sku->id;
+                $attributeVal->save();
+
+                $attributeVal->save();
+            }
         }
 
 
@@ -576,10 +605,12 @@ class ProductController extends \TCG\Voyager\Http\Controllers\VoyagerBaseControl
         // Process the Excel file
         \Maatwebsite\Excel\Facades\Excel::import(new ProductImportClass, $file);
     }
-	
-	  public function update(Request $request, $id)
+
+    public function update(Request $request, $id)
     {
-		    $attributeTypes = $request->types;
+        // return $request;
+        ini_set('max_execution_time', 0);
+        $attributeTypes = $request->types;
         $attributeKeys = $request->keys;
         $attributeValues = $request->values;
 
@@ -615,57 +646,65 @@ class ProductController extends \TCG\Voyager\Http\Controllers\VoyagerBaseControl
         $original_data = clone ($data);
 
         $this->insertUpdateData($request, $slug, $dataType->editRows, $data);
-		$sku = ProductsSku::where("product_id",$id)->first();
-		  if($request->created_by){
-		  	$sku->created_by = $request->created_by;
-		  }
-		 $sku->currency = $request->currency ?? "USD";
-		 $sku->save(); 
-		$attrsss =  \App\AttributeValue::where("sku_id",$sku->id)->get();
-		foreach($attrsss as $ar){
-			$ar->delete();
-		}
-		$conss = ProductProsCon::where("product_id",$sku->id)->get();
-		  
-		foreach($conss as $co){
-			$co->delete();
-		}		  
-		$compareTypes = $request->compareTypes;
+        $sku = ProductsSku::where("product_id", $id)->first();
+        if ($request->created_by) {
+            $sku->created_by = $request->created_by;
+        }
+        $sku->currency = $request->currency ?? "USD";
+        $sku->save();
+        $attrsss = AttributeValue::where("sku_id", $sku->id)->get();
+        foreach ($attrsss as $ar) {
+            $ar->delete();
+        }
+        $conss = ProductProsCon::where("product_id", $sku->id)->get();
+
+        foreach ($conss as $co) {
+            $co->delete();
+        }
+        $compareTypes = $request->compareTypes;
         $compareValues = $request->compareValues;
-	if($compareTypes){
-        foreach ($compareTypes as $ind => $compareType) {
-            $compare = new ProductProsCon();
-            $compare->type = $compareType;
-            $compare->description = $compareValues[$ind];
-            $compare->product_id = $sku->id;
-            $compare->save();
+        if ($compareTypes) {
+            foreach ($compareTypes as $ind => $compareType) {
+                $compare = new ProductProsCon();
+                $compare->type = $compareType;
+                $compare->description = $compareValues[$ind];
+                $compare->product_id = $sku->id;
+                $compare->save();
+            }
         }
-	}	
-		if($attributeValues){
-			//return [$attributeKeys,$attributeValues,$attributeTypes];
-       foreach ($attributeValues as $index => $attVal) {
-            $attributeVal = new \App\AttributeValue();
-			$ke = \App\NewAttributesValue::where("en_name",$attVal)->first();
-			if($ke){
-				$attrKey = $ke->attribute_type;
-            	$attr = Attribute::find($attrKey);
-			}
-		   else{
-			   if($index < count($attributeTypes)){
-					$attrKey = $attributeTypes[$index];
-					$attr = Attribute::find($attrKey);
-			   }
-		   }
-			
-			
+        if ($attributeValues) {
+            //return [$attributeKeys,$attributeValues,$attributeTypes];
+            if ($request->spes) {
+                foreach ($request->spes as $spec) {
+                    $attributeVal = new AttributeValue();
+                    $attributeVal->attribute_type = 226;
+                    $attributeVal->attribute_value = $spec;
+                    $attributeVal->sku_id = $sku->id;
+                    $attributeVal->save();
+                }
+            }
+            foreach ($attributeValues as $index => $attVal) {
+                $attributeVal = new AttributeValue();
+                $ke = \App\NewAttributesValue::where("en_name", $attVal)->first();
+                if ($ke) {
+                    $attrKey = $ke->attribute_type;
+                    $attr = Attribute::find($attrKey);
+                } else {
+                    if ($index < count($attributeTypes)) {
+                        $attrKey = $attributeTypes[$index];
+                        $attr = Attribute::find($attrKey);
+                    }
+                }
 
-            $attributeVal->attribute_type = $attr->id;
-            $attributeVal->attribute_value = $attVal;
-            $attributeVal->sku_id = $sku->id;
-            $attributeVal->save();
+                if ($attr) {
+                    $attributeVal->attribute_type = $attr->id;
+                    $attributeVal->attribute_value = $attVal;
+                    $attributeVal->sku_id = $sku->id;
+                    $attributeVal->save();
 
-            $attributeVal->save();
-        }
+                    $attributeVal->save();
+                }
+            }
         }
 
         // Delete Images

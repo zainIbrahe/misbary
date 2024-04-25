@@ -69,7 +69,12 @@ class HomeController extends Controller
 		$user = auth()->user();
 
 		// Replace 'plan_id' and 'post_limit' with your actual table columns
-		$postLimit = $user->plan->posts_num;
+		if ($user->plan) {
+			$postLimit = $user->plan->posts_num;
+		} else {
+			$postLimit = 0;
+
+		}
 
 		// Get the user's current post count (modify based on your model relations)
 		$currentPostCount = \App\Product::where("created_by", $user->id)->count();
@@ -100,28 +105,11 @@ class HomeController extends Controller
 		return response()->json([
 			"message" => "Success",
 			"data" => [
-				"plans" => PlanResource::collection($plans)
-			],
+					"plans" => PlanResource::collection($plans)
+				],
 			"success" => 1
 		]);
 
-	}
-	public function sendM()
-	{
-		try {
-			$twilio = new Client("ACee3f000a088bc43718654e8fd99d08aa", "c7023effb37c702e259ffb07a6b096b6");
-
-			$twilio->messages->create(
-				"whatsapp:+9647519608073", // $receiverphone
-				[
-					"from" => "whatsapp:+9647735004555", //$sendernumber
-					"body" => "*{{1}}* هو رمز التحقق الخاص بك. للحفاظ على أمانك، تجنب مشاركة هذا الرمز."
-				]
-			);
-			return "asda";
-		} catch (\Exception $e) {
-			return $e;
-		}
 	}
 
 	public function searchData()
@@ -131,8 +119,8 @@ class HomeController extends Controller
 		return response()->json([
 			"message" => "Success",
 			"data" => [
-				"milages" => $milages
-			],
+					"milages" => $milages
+				],
 			"success" => 1
 		]);
 	}
@@ -156,21 +144,24 @@ class HomeController extends Controller
 		return response()->json([
 			"message" => "Success",
 			"data" => [
-				"cars" => ProductResource::collection($posts)
-			],
+					"cars" => ProductResource::collection($posts)
+				],
 			"success" => 1
 		]);
 	}
 
 	public function dealers()
 	{
-		$dealers = User::where("phone", "!=", "null")->where("show", 1)->get();
+		$dealers = User::with("city")->where("role_id", 3)->where("show", 1)->get();
+		// foreach($dealers as $deal){
+		// 	$deal->isFav = $deal->isFav(auth()->id());
+		// }
 
 		return response()->json([
 			"message" => "Success",
 			"data" => [
-				"dealers" => UserResource::collection($dealers)
-			],
+					"dealers" => UserResource::collection($dealers)
+				],
 			"success" => 1
 		]);
 	}
@@ -185,6 +176,9 @@ class HomeController extends Controller
 			"success" => 1
 		]);
 	}
+
+
+
 	public function index()
 	{
 		$advertisments = Advertisment::with("product")->get();
@@ -217,22 +211,21 @@ class HomeController extends Controller
 						$query->where("updated_at", ">", Carbon::now()->subDay())->where('status', 1);
 					}
 				])->get();
-		$galleries = User::where("phone", "!=", null)->where("verified", 1)->where("show", 1)->get();
+		$galleries = User::with('city')->where("phone", "!=", null)->where("verified", 1)->where("show", 1)->get();
 		$reels = Reel::with("product", "created_bys")->get();
 		return response()->json([
 			"message" => "Success",
 			"data" => [
-				"advertisments" => AdvertismentResource::collection($advertisments),
-				//"posts" => ProductResource::collection($posts),
-				"posts" => [],
-				"popular" => ProductResource::collection($posts),
-				"suggested" => ProductResource::collection($posts),
-				"filter" => FilterResource::collection($filters),
-				"stories" => UserResource::collection($stories),
-				"galleries" => UserResource::collection($galleries),
-				"inPostAds" => $in_post_ads,
-				"reels" => ReelsResource::collection($reels)
-			],
+					"advertisments" => AdvertismentResource::collection($advertisments),
+					"posts" => [],
+					"popular" => ProductResource::collection($posts),
+					"suggested" => ProductResource::collection($posts),
+					"filter" => FilterResource::collection($filters),
+					"stories" => UserResource::collection($stories),
+					"galleries" => UserResource::collection($galleries),
+					"inPostAds" => $in_post_ads,
+					"reels" => ReelsResource::collection($reels)
+				],
 			"status" => 1
 		]);
 	}
@@ -243,8 +236,8 @@ class HomeController extends Controller
 		return response()->json([
 			"message" => "Success",
 			"data" => [
-				"reels" => ReelsResource::collection($reels)
-			],
+					"reels" => ReelsResource::collection($reels)
+				],
 			"status" => 1
 		]);
 	}
@@ -366,20 +359,20 @@ class HomeController extends Controller
 		return response()->json([
 			"message" => "Success",
 			"data" => [
-				"regions" => CityResource::collection($regions)
-			],
+					"regions" => CityResource::collection($regions)
+				],
 			"status" => 1
 		]);
 	}
 
 	public function cities()
 	{
-		$cities = City::where("parent_id", null)->get();
+		$cities = City::where("parent_id", null)->where("name", "!=", null)->get();
 		return response()->json([
 			"message" => "Success",
 			"data" => [
-				"cities" => CityResource::collection($cities)
-			],
+					"cities" => CityResource::collection($cities)
+				],
 			"status" => 1
 		]);
 	}
@@ -392,7 +385,7 @@ class HomeController extends Controller
 	}
 	public function createPostPage()
 	{
-		$brands = Category::where('parent_id', null)->get();
+		$brands = Category::where('parent_id', null)->orWhere("parent_id", "!=", 0)->get();
 		$cities = CityResource::collection(City::where("parent_id", null)->get());
 		$attributes = Attribute::with('values')->get();
 		$currencies = '[
@@ -402,11 +395,11 @@ class HomeController extends Controller
 		return response()->json([
 			"message" => "Success",
 			"data" => [
-				"brands" => CategoryResource::collection($brands),
-				"attributes" => AttributeResource2::collection($attributes),
-				"cities" => $cities,
-				"currencies" => json_decode($currencies)
-			],
+					"brands" => CategoryResource::collection($brands),
+					"attributes" => AttributeResource2::collection($attributes),
+					"cities" => $cities,
+					"currencies" => json_decode($currencies)
+				],
 			"status" => 1
 		]);
 	}
@@ -417,8 +410,8 @@ class HomeController extends Controller
 		return response()->json([
 			"message" => "Success",
 			"data" => [
-				"brands" => ClasseResource::collection($models),
-			],
+					"brands" => ClasseResource::collection($models),
+				],
 			"status" => 1
 		]);
 	}
@@ -429,8 +422,8 @@ class HomeController extends Controller
 		return response()->json([
 			"message" => "Success",
 			"data" => [
-				"brands" => CategoryResource::collection($models),
-			],
+					"brands" => CategoryResource::collection($models),
+				],
 			"status" => 1
 		]);
 	}
@@ -438,15 +431,22 @@ class HomeController extends Controller
 	public function adddealertofav($id)
 	{
 		$user = User::find(auth()->user()->id);
+		$oldFav = Favourite::where("model", "Product")->where("product_id", $id)->where("user_id", $id)->get();
+		foreach ($oldFav as $old) {
+			$old->remove();
+		}
+
 		$fav = new Favourite();
 		$fav->user_id = $user->id;
 		$fav->product_id = $id;
 		$fav->model = "User";
 		$fav->save();
+
+
 		return response()->json([
 			"message" => "Success",
 			"data" => [
-			],
+				],
 			"status" => 1
 		]);
 	}
@@ -461,7 +461,7 @@ class HomeController extends Controller
 		return response()->json([
 			"message" => "Success",
 			"data" => [
-			],
+				],
 			"status" => 1
 		]);
 
@@ -476,7 +476,7 @@ class HomeController extends Controller
 		return response()->json([
 			"message" => "Success",
 			"data" => [
-			],
+				],
 			"status" => 1
 		]);
 	}
@@ -487,7 +487,7 @@ class HomeController extends Controller
 			return response()->json([
 				"message" => "Failed",
 				"data" => [
-				],
+					],
 				"status" => 1
 			], 403);
 		} else {
@@ -502,8 +502,8 @@ class HomeController extends Controller
 		return response()->json([
 			"message" => "Success",
 			"data" => [
-				"favourites" => UserResource::collection($dealers),
-			],
+					"favourites" => UserResource::collection($dealers),
+				],
 			"status" => 1
 		]);
 	}
@@ -514,7 +514,7 @@ class HomeController extends Controller
 			return response()->json([
 				"message" => "Failed",
 				"data" => [
-				],
+					],
 				"status" => 1
 			], 403);
 		} else {
@@ -532,8 +532,8 @@ class HomeController extends Controller
 		return response()->json([
 			"message" => "Success",
 			"data" => [
-				"favourites" => ProductResource::collection($products),
-			],
+					"favourites" => ProductResource::collection($products),
+				],
 			"status" => 1
 		]);
 
@@ -541,7 +541,7 @@ class HomeController extends Controller
 
 	public function addPost(Request $request)
 	{
-
+		ini_set('max_execution_time', 0);
 		//Log::info("request".[$request]);
 
 		if (count(Input::file('files')) < 4 || count(Input::file('files')) > 20) {
@@ -754,6 +754,7 @@ class HomeController extends Controller
 
 	public function updatePost(Request $request, $id)
 	{
+		ini_set('max_execution_time', 0);
 		$paths = [];
 		if ($request->hasFile('files.*')) {
 			foreach ($request->file('files') as $file) {
@@ -939,11 +940,11 @@ class HomeController extends Controller
 		return response()->json([
 			"message" => "Success",
 			"data" => [
-				"advertisments" => AdvertismentResource::collection($advertisments),
-				"posts" => ProductResource::collection($posts->get()),
-				"filter" => FilterResource::collection($filters),
-				"stories" => UserResource::collection($stories)
-			],
+					"advertisments" => AdvertismentResource::collection($advertisments),
+					"posts" => ProductResource::collection($posts->get()),
+					"filter" => FilterResource::collection($filters),
+					"stories" => UserResource::collection($stories)
+				],
 			"status" => 1
 		]);
 
@@ -957,8 +958,8 @@ class HomeController extends Controller
 		return response()->json([
 			"message" => "Success",
 			"data" => [
-				'user' => new UserResource($user)
-			],
+					'user' => new UserResource($user)
+				],
 			"status" => 1
 		]);
 	}
@@ -972,8 +973,8 @@ class HomeController extends Controller
 		return response()->json([
 			"message" => "Success",
 			"data" => [
-				'user' => new UserResource($user)
-			],
+					'user' => new UserResource($user)
+				],
 			"status" => 1
 		]);
 	}
@@ -1008,11 +1009,11 @@ class HomeController extends Controller
 		return response()->json([
 			"message" => "Success",
 			"data" => [
-				'post' => (new ProductResource($post))->lang($lang),
-				'specifications' => $specifications,
-				'otherSpec' => $otherSpec,
-				'similar' => ProductResource::collection($similar)
-			],
+					'post' => (new ProductResource($post))->lang($lang),
+					'specifications' => $specifications,
+					'otherSpec' => $otherSpec,
+					'similar' => ProductResource::collection($similar)
+				],
 			"status" => 1
 		]);
 
@@ -1027,8 +1028,8 @@ class HomeController extends Controller
 		return response()->json([
 			'message' => 'success',
 			'data' => [
-				'stories' => UserResource::collection($stories)
-			],
+					'stories' => UserResource::collection($stories)
+				],
 			'status' => 1
 		]);
 	}
@@ -1041,8 +1042,8 @@ class HomeController extends Controller
 		return response()->json([
 			'message' => 'success',
 			'data' => [
-				'story' => new StoryResource($story)
-			],
+					'story' => new StoryResource($story)
+				],
 			'status' => 1
 		]);
 	}
@@ -1068,8 +1069,8 @@ class HomeController extends Controller
 			return response()->json([
 				'message' => 'Success, Your story has been send and waiting for admin approval!',
 				'data' => [
-					'story' => new StoryResource($story)
-				],
+						'story' => new StoryResource($story)
+					],
 				'status' => 1
 			]);
 		} else {
@@ -1077,7 +1078,7 @@ class HomeController extends Controller
 				'message' => 'failed, The File in mandatory',
 				'data' => [
 
-				],
+					],
 				'status' => 0
 			], 403);
 		}
@@ -1090,7 +1091,7 @@ class HomeController extends Controller
 		return response()->json([
 			'message' => 'Operation Done successfully',
 			'data' => [
-			],
+				],
 			'status' => 1
 		]);
 

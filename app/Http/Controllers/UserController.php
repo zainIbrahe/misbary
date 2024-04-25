@@ -119,7 +119,7 @@ class UserController extends Controller
                 ]);
 				
             } elseif ($model->timestamps) {
-                $dataTypeContent = call_user_func([$query->where("name","!=","Admin")->latest($model::CREATED_AT), $getter]);
+                $dataTypeContent = call_user_func([$query->orWhere("role_id",3)->latest($model::CREATED_AT), $getter]);
 				
             } else {
                 $dataTypeContent = call_user_func([$query->orderBy($model->getKeyName(), 'DESC'), $getter]);

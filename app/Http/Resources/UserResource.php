@@ -6,7 +6,6 @@ use App\Product;
 use App\ProductsSku;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-
 class UserResource extends JsonResource
 {
     /**
@@ -16,7 +15,7 @@ class UserResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-		$isFav = $this->isFav();
+		$isFav = 0;
         $posts = ProductsSku::where('created_by', 1)->count();
 		$avatar = str_replace("/var/www/vhosts/misbary.app/httpdocs/public/storage/","",$this->resource->avatar);
 		$avatar = str_replace("/var/www/vhosts/corline.store/misbary.corline.store/public/storage/","",$avatar);
@@ -58,6 +57,7 @@ class UserResource extends JsonResource
 			'token'=>$this->resource->plainTextToken,
 			'created_by'=>$this->resource->created_by != null ? $this->resource->created_by : 1,
 			'createdAt' => date('Y-m-d', strtotime($this->resource->created_at)),
+			'location' => $this->resource->city ? $this->lang != "ar" ? $this->resource->city->name : $this->resource->city->{"{$this->lang}_name"}  : "",
         ];
     }
 }

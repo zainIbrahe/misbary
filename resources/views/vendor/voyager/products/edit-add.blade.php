@@ -69,12 +69,13 @@
 
                             @foreach ($dataTypeRows as $row)
                                 <!-- GET THE DISPLAY OPTIONS -->
-							
-								
+
+
                                 @php
                                     $display_options = $row->details->display ?? null;
                                     if ($dataTypeContent->{$row->field . '_' . ($edit ? 'edit' : 'add')}) {
-                                        $dataTypeContent->{$row->field} = $dataTypeContent->{$row->field . '_' . ($edit ? 'edit' : 'add')};
+                                        $dataTypeContent->{$row->field} =
+                                            $dataTypeContent->{$row->field . '_' . ($edit ? 'edit' : 'add')};
                                     }
                                 @endphp
                                 @if (isset($row->details->legend) && isset($row->details->legend->text))
@@ -90,7 +91,6 @@
                                         for="name">{{ $row->getTranslatedAttribute('display_name') }}</label>
                                     @include('voyager::multilingual.input-hidden-bread-edit-add')
                                     @if ($add && isset($row->details->view_add))
-									
                                         @include($row->details->view_add, [
                                             'row' => $row,
                                             'dataType' => $dataType,
@@ -100,7 +100,6 @@
                                             'options' => $row->details,
                                         ])
                                     @elseif ($edit && isset($row->details->view_edit))
-									
                                         @include($row->details->view_edit, [
                                             'row' => $row,
                                             'dataType' => $dataType,
@@ -110,7 +109,6 @@
                                             'options' => $row->details,
                                         ])
                                     @elseif (isset($row->details->view))
-									
                                         @include($row->details->view, [
                                             'row' => $row,
                                             'dataType' => $dataType,
@@ -138,54 +136,51 @@
                                     @endif
                                 </div>
                             @endforeach
-							
-							
-							<div class="form-group col-md-12 ">
-								<label class="control-label"
-                                        for="currency">Currency</label>
-								<select name="currency" class="form-control">
-									@foreach(json_decode($currencies) as $cur)
-										<option @if(count($dataTypeContent->sku) > 0 && $dataTypeContent->sku[0]->currency == $cur->cc ) selected @endif value="{{$cur->cc}}">{{$cur->cc}}</option>
-									@endforeach
-								</select>
-							</div>
-							
+
+
+                            <div class="form-group col-md-12 ">
+                                <label class="control-label" for="currency">Currency</label>
+                                <select name="currency" class="form-control">
+                                    @foreach (json_decode($currencies) as $cur)
+                                        <option @if (count($dataTypeContent->sku) > 0 && $dataTypeContent->sku[0]->currency == $cur->cc) selected @endif
+                                            value="{{ $cur->cc }}">{{ $cur->cc }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
 
                             <div class="attribute-values">
                                 <div class="container">
-										@if(count($dataTypeContent->sku) > 0)
-										
-										@foreach($dataTypeContent->sku[0]->attributes as $at)
-										@if( $at->attribute_type != 226)
-											 <div class="row">
+                                    <div class="row">
                                         <div class="col-md-3"
                                             style="justify-content: center;align-items: center;margin-bottom: 0px">
                                             <div class="form-group" style="width:100%">
                                                 <label for="">
                                                     Attribute Type
                                                 </label>
-                                                <select  class="form-control changeAttr" name="types[]">`;
-													@foreach($attributes as $att)
-														<option {{$att->id == $at->attribute_type ? "selected" : ""}} value="{{$att->id}}">{{$att->name}}</option>
-													@endforeach
+                                                <select class="form-control changeAttr" name="types[]">`;
+                                                    <option value="" selected>Specifications</option>
                                                 </select>
                                             </div>
                                         </div>
                                         <div class="col-md-3"
                                             style="justify-content: center;align-items: center;margin-bottom: 0px">
-                                          
+
                                         </div>`;
-		
-		                 <div class="col-md-3"
+
+                                        <div class="col-md-3"
                                             style="justify-content: center;align-items: center;margin-bottom: 0px">
                                             <div class="form-group" style="width:100%">
                                                 <label for="">
                                                     Attribute Value
                                                 </label>
-                                                <select  name="values[]" class="attVals form-control">
-                                                    <option value="{{$at->attribute_value}}">
-                                                        {{$at->attribute_value}}
-                                                    </option>
+                                                <select multiple name="spes[]" class="form-control select2">
+                                                    @foreach ($specValues as $specVal)
+                                                        <option value="{{ $specVal->name }}"
+                                                            {{ isset($productspecsvals) && in_array($specVal->name, $productspecsvals) ? 'selected' : '' }}>
+                                                            {{ $specVal->name }}
+                                                        </option>
+                                                    @endforeach
                                                 </select>
                                             </div>
                                         </div>
@@ -195,50 +190,55 @@
                                                 style="font-size:20px;color:red;cursor: pointer;"></span>
                                         </div>
                                     </div>
-									@endif
-										@endforeach
-										 <div class="row">
-                                        <div class="col-md-3"
-                                            style="justify-content: center;align-items: center;margin-bottom: 0px">
-                                            <div class="form-group" style="width:100%">
-                                                <label for="">
-                                                    Attribute Type
-                                                </label>
-                                                <select  class="form-control changeAttr" name="types[]">`;
-													@foreach($attributes as $att)
-														<option {{$att->id == 226 ? "selected" : ""}} value="{{$att->id}}">{{$att->name}}</option>
-													@endforeach
-                                                </select>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-3"
-                                            style="justify-content: center;align-items: center;margin-bottom: 0px">
-                                        </div>`;
-		
-		                 <div class="col-md-3"
-                                            style="justify-content: center;align-items: center;margin-bottom: 0px">
-                                            <div class="form-group" style="width:100%">
-                                                <label for="">
-                                                    Attribute Value
-                                                </label>
-                                                <select  multiple name="values[]" class="attVals form-control">
-													@foreach($dataTypeContent->sku[0]->attributes as $at)
-													@if($at->attribute_type == 226)
-														<option selected value="{{$at->attribute_value}}">
-                                                        	{{$at->attribute_value}}
-                                                    	</option>
-													@endif
-													@endforeach
-                                                </select>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-2"
-                                            style="justify-content: center;align-items: center;margin-bottom: 0px">
-                                            <span class="icon voyager-trash deleteLine"
-                                                style="font-size:20px;color:red;cursor: pointer;"></span>
-                                        </div>
-                                    </div>
-									@endif
+                                    @if (count($dataTypeContent->sku) > 0)
+
+                                        @foreach ($dataTypeContent->sku[0]->attributes as $at)
+                                            @if ($at->attribute_type != 226)
+                                                <div class="row">
+                                                    <div class="col-md-3"
+                                                        style="justify-content: center;align-items: center;margin-bottom: 0px">
+                                                        <div class="form-group" style="width:100%">
+                                                            <label for="">
+                                                                Attribute Type
+                                                            </label>
+                                                            <select class="form-control changeAttr" name="types[]">`;
+                                                                @foreach ($attributes as $att)
+                                                                    <option
+                                                                        {{ $att->id == $at->attribute_type ? 'selected' : '' }}
+                                                                        value="{{ $att->id }}">{{ $att->name }}
+                                                                    </option>
+                                                                @endforeach
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-3"
+                                                        style="justify-content: center;align-items: center;margin-bottom: 0px">
+
+                                                    </div>`;
+
+                                                    <div class="col-md-3"
+                                                        style="justify-content: center;align-items: center;margin-bottom: 0px">
+                                                        <div class="form-group" style="width:100%">
+                                                            <label for="">
+                                                                Attribute Value
+                                                            </label>
+                                                            <select name="values[]" class="attVals form-control">
+                                                                <option value="{{ $at->attribute_value }}">
+                                                                    {{ $at->attribute_value }}
+                                                                </option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-2"
+                                                        style="justify-content: center;align-items: center;margin-bottom: 0px">
+                                                        <span class="icon voyager-trash deleteLine"
+                                                            style="font-size:20px;color:red;cursor: pointer;"></span>
+                                                    </div>
+                                                </div>
+                                            @endif
+                                        @endforeach
+
+                                    @endif
                                 </div>
                             </div>
                             <button type="button" class="btn btn-primary add-attr mt-4">Add Attribute</button>
@@ -247,56 +247,62 @@
 
                             <div class="pros-values">
                                 <div class="container">
-									@if(count($dataTypeContent->sku) > 0)
-									
-										@foreach($dataTypeContent->sku[0]->pro as $pro)
-									@if($pro->type == "pros" || $pro->type == "cons" || $pro->type == "whatsnew")
-											<div class="row">
-                                        <div class="col-md-3"
-                                            style="justify-content: center;align-items: center;margin-bottom: 0px">
-                                            <div class="form-group" style="width:100%">
-                                                <label for="">
-                                                    Compare Type
-                                                </label>
-                                                <select class="form-control" name="compareTypes[]">
-                                                    <option {{ $pro->type == "pros" ? "selected" : ""}} value="pros">Pros</option>
-                                                    <option {{ $pro->type == "cons" ? "selected" : ""}} value="cons">Cons</option>
-													<option {{ $pro->type == "whatsnew" ? "selected" : ""}} value="whatsnew">Whats New</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-3"
-                                            style="justify-content: center;align-items: center;margin-bottom: 0px">
-                                            
-                                        </div>
-                                        <div class="col-md-3"
-                                            style="justify-content: center;align-items: center;margin-bottom: 0px">
-                                            <div class="form-group" style="width:100%">
-                                                <label for="">
-                                                    Compare Description
-                                                </label>
-                                                <input type="text" value={{$pro->description}} class="form-control" name="compareValues[]" id="">
-                                            </div>
-                                        </div>
-                                        <div class="col-md-2"
-                                            style="justify-content: center;align-items: center;margin-bottom: 0px">
-                                            <span class="icon voyager-trash deleteLine"
-                                                style="font-size:20px;color:red;cursor: pointer;"></span>
-                                        </div>
-                                    </div>
-											@endif
-										@endforeach
-									@endif
-                            </div>
-                            <button type="button" class="btn btn-primary add-pros mt-4">Add Features</button>
-                        </div><!-- panel-body -->
+                                    @if (count($dataTypeContent->sku) > 0)
 
-                        <div class="panel-footer">
-                        @section('submit-buttons')
-                            <button type="submit" class="btn btn-primary save">{{ __('voyager::generic.save') }}</button>
-                        @stop
-                        @yield('submit-buttons')
-                    </div>
+                                        @foreach ($dataTypeContent->sku[0]->pro as $pro)
+                                            @if ($pro->type == 'pros' || $pro->type == 'cons' || $pro->type == 'whatsnew')
+                                                <div class="row">
+                                                    <div class="col-md-3"
+                                                        style="justify-content: center;align-items: center;margin-bottom: 0px">
+                                                        <div class="form-group" style="width:100%">
+                                                            <label for="">
+                                                                Compare Type
+                                                            </label>
+                                                            <select class="form-control" name="compareTypes[]">
+                                                                <option {{ $pro->type == 'pros' ? 'selected' : '' }}
+                                                                    value="pros">Pros</option>
+                                                                <option {{ $pro->type == 'cons' ? 'selected' : '' }}
+                                                                    value="cons">Cons</option>
+                                                                <option {{ $pro->type == 'whatsnew' ? 'selected' : '' }}
+                                                                    value="whatsnew">Whats New</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-3"
+                                                        style="justify-content: center;align-items: center;margin-bottom: 0px">
+
+                                                    </div>
+                                                    <div class="col-md-3"
+                                                        style="justify-content: center;align-items: center;margin-bottom: 0px">
+                                                        <div class="form-group" style="width:100%">
+                                                            <label for="">
+                                                                Compare Description
+                                                            </label>
+                                                            <input type="text" value={{ $pro->description }}
+                                                                class="form-control" name="compareValues[]"
+                                                                id="">
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-2"
+                                                        style="justify-content: center;align-items: center;margin-bottom: 0px">
+                                                        <span class="icon voyager-trash deleteLine"
+                                                            style="font-size:20px;color:red;cursor: pointer;"></span>
+                                                    </div>
+                                                </div>
+                                            @endif
+                                        @endforeach
+                                    @endif
+                                </div>
+                                <button type="button" class="btn btn-primary add-pros mt-4">Add Features</button>
+                            </div><!-- panel-body -->
+
+                            <div class="panel-footer">
+                            @section('submit-buttons')
+                                <button type="submit"
+                                    class="btn btn-primary save">{{ __('voyager::generic.save') }}</button>
+                            @stop
+                            @yield('submit-buttons')
+                        </div>
                 </form>
 
                 <div style="display:none">
@@ -314,7 +320,8 @@
 
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h4 class="modal-title"><i class="voyager-warning"></i> {{ __('voyager::generic.are_you_sure') }}</h4>
+                <h4 class="modal-title"><i class="voyager-warning"></i> {{ __('voyager::generic.are_you_sure') }}
+                </h4>
             </div>
 
             <div class="modal-body">
@@ -340,8 +347,8 @@
 
     $('.add-attr').click(function() {
         $attributeElement = $(".attribute-values .container");
-		var attrs = @json($attributes);
-		
+        var attrs = @json($attributes);
+
         let attributeLiine = `
         						<div class="row">
                                         
@@ -352,10 +359,10 @@
                                                     Attribute Type
                                                 </label>
                                                 <select class="form-control changeAttr" name="types[]">`;
-		for(v in attrs){
-			attributeLiine += `<option value="`+attrs[v].id+`">`+attrs[v].name+`</option>`;										  
-		}
-		attributeLiine += `
+        for (v in attrs) {
+            attributeLiine += `<option value="` + attrs[v].id + `">` + attrs[v].name + `</option>`;
+        }
+        attributeLiine += `
                                                 </select>
                                             </div>
                                         </div>
@@ -363,9 +370,9 @@
                                             style="justify-content: center;align-items: center;margin-bottom: 0px">
                                           
                                         </div>`;
-		
-		
-                      attributeLiine += `<div class="col-md-3"
+
+
+        attributeLiine += `<div class="col-md-3"
                                             style="justify-content: center;align-items: center;margin-bottom: 0px">
                                             <div class="form-group" style="width:100%">
                                                 <label for="">
@@ -437,28 +444,27 @@
             }
         });
         attrElement = $(this);
-		var vals = this.value;
-	
+        var vals = this.value;
+
         $.ajax({
             type: "GET",
             dataType: "json",
             url: '/api/getAttrValues/' + this.value,
             success: function(response) {
-                
+
                 $result = $(attrElement).parent().parent().next().next().find(
                     '.form-group .attVals');
                 $result.html('');
-				if(response[0].type == "text"){
-					$result.remove();
-					$(attrElement).parent().parent().next().next().html(`   <div class="form-group" style="width:100%">
+                if (response[0].type == "text") {
+                    $result.remove();
+                    $(attrElement).parent().parent().next().next().html(`   <div class="form-group" style="width:100%">
 					<label for="">
                                                     Attribute Value
                                                 </label>
 												<input type='text' name='values[]' class='form-control attVals' /></div>`);
-				}
-				else{
-					$(attrElement).parent().parent().next().next().html("");
-					$(attrElement).parent().parent().next().next().append(`   <div class="form-group" style="width:100%">  <label for="">
+                } else {
+                    $(attrElement).parent().parent().next().next().html("");
+                    $(attrElement).parent().parent().next().next().append(`   <div class="form-group" style="width:100%">  <label for="">
                                                     Attribute Value
                                                 </label>
                                                 <select name="values[]" class="attVals form-control">
@@ -466,29 +472,29 @@
                                                         Choose Value
                                                     </options>
                                                 </select></div>`);
-					 $result = $(attrElement).parent().parent().next().next().find(
-                    '.form-group .attVals');
-					response[1].forEach(element => {
-						 $result = $(attrElement).parent().parent().next().next().find(
-                    '.form-group .attVals');
-						
-                    $result.append(
-							`<option value="` + element.en_name + `">` + element.en_name +
-							`</option>`
-						);
-					});
-					
-						if(vals == "226"){
-							console.log(vals);
-							$(attrElement).parent().parent().next().next().find(
-									'.form-group .attVals').attr("multiple","multiple");
-						}
-						else{
-							$(attrElement).parent().parent().next().next().find(
-									'.form-group .attVals').removeAttr("multiple")
-						}
-				}
-                
+                    $result = $(attrElement).parent().parent().next().next().find(
+                        '.form-group .attVals');
+                    response[1].forEach(element => {
+                        $result = $(attrElement).parent().parent().next().next().find(
+                            '.form-group .attVals');
+
+                        $result.append(
+                            `<option value="` + element.en_name + `">` + element
+                            .en_name +
+                            `</option>`
+                        );
+                    });
+
+                    if (vals == "226") {
+                        console.log(vals);
+                        $(attrElement).parent().parent().next().next().find(
+                            '.form-group .attVals').attr("multiple", "multiple");
+                    } else {
+                        $(attrElement).parent().parent().next().next().find(
+                            '.form-group .attVals').removeAttr("multiple")
+                    }
+                }
+
             }
         })
     })

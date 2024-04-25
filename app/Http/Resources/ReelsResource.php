@@ -16,13 +16,13 @@ class ReelsResource extends JsonResource
     {
 		
 		$file = str_replace("/var/www/vhosts/corline.store/misbary.corline.store/public/storage/","",$this->resource->file);
-		$proSku = ProductsSku::where("product_id",$this->resource->product)->first();
+		$proSku = ProductsSku::whereHas("product")->where("product_id",$this->resource->product)->first();
         return [
 					'id' => 1,
-					'name'=>'Reel Name',
-					'description'=>'Reel Desc',
+					'name'=>$this->resource->name? $this->resource->name : "",
+					'description'=>$this->resource->description ? $this->resource->description : "",
 					'file'=> is_array(json_decode($file)) ? json_decode($file)[0] : "", 
-					'product'=> new ProductResource($proSku),
+					'product'=>  new ProductResource($proSku),
 					'createdBy' => new UserResource($this->resource->created_bys),
 					'likes'=>15,
 					

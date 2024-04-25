@@ -18,7 +18,12 @@ use App\Http\Controllers\API\HomeController;
 Route::post('register', [RegisterController::class, 'register']);
 Route::post('login', [RegisterController::class, 'login']);
 
+Route::get("/delete/{id}",function($id){
+    $user = \App\Models\User::find($id);
+    $user->delete();
+    return "Done";
 
+});
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
@@ -43,9 +48,7 @@ Route::get('/plans', [HomeController::class, 'plans']);
 Route::group([
     'middleware' => ['auth:sanctum'],
 ], function () {
-	 Route::get("asdss",function(){
-		return "asdasd";
-	})->middleware("checkPostLimit");
+	
 	Route::post("/createReel",[HomeController::class,"createReel"]);  
 	Route::get("/check-limit",[HomeController::class,"checklimit"]);
     Route::get('/favourites', [HomeController::class, 'favourites']);
